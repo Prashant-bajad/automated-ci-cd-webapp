@@ -1,0 +1,16 @@
+version: '3.8' # Docker Compose file format version
+
+services:
+  webapp:
+    build:
+      context: . # Dockerfile is in the current directory
+      dockerfile: Dockerfile
+    ports:
+      - "80:3000" # Map host port 80 to container port 3000
+    environment:
+      # Production mein ye env vars secret management se aayenge
+      NODE_ENV: development
+      # PORT: 3000 # Ye already index.js mein default hai
+    volumes:
+      - .:/app # Code changes automatically reflect in container (for dev)
+      - /app/node_modules # Ye line host machine ke node_modules ko mount hone se rokti hai
