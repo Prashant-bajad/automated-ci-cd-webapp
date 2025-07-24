@@ -58,7 +58,7 @@ pipeline {
         stage('Deploy to EC2') {
                 steps {
                     script {
-                        sshagent(credentials: ['ec2-ssh-key']) { // 'ec2-ssh-key' is the credential ID
+                        sshagent(credentials: ['ec2-ssh-key'])  // 'ec2-ssh-key' is the credential ID
                             sh """
                                 ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << 'EOF'
                                   echo "Stopping existing container..."
@@ -72,11 +72,10 @@ pipeline {
                                   echo "Deployment complete!"
 EOF
                             """
-                        }
+                        
                     }
                 }
             }
-
     post {
         always {
             // Clean up Docker login session
@@ -91,4 +90,4 @@ EOF
             echo 'Pipeline failed!'
         }
     }
-}
+    }
