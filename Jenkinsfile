@@ -42,17 +42,18 @@ pipeline {
         }
 
         stage('Docker Login and Push') {
-            steps {
-                script {
-                    // Login to Docker Hub using stored Jenkins credentials
-                    withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CRED_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-                        // Push the Docker image to Docker Hub
-                        sh "docker push ${env.DOCKERHUB_USERNAME}/${env.REPO_NAME}:latest"
+                steps {
+                    script {
+                        withCredentials([usernamePassword(credentialsId: env.DOCKERHUB_CRED_ID, usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                            // Modified line: Use double quotes for the echo command, and ensure variables are properly expanded.
+                            sh """
+                                echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+                                docker push ${env.DOCKERHUB_USERNAME}/${env.REPO_NAME}:latest
+                            """
+                        }
                     }
                 }
             }
-        }
 
         stage('Deploy to EC2') {
             steps {
