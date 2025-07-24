@@ -56,35 +56,26 @@ pipeline {
             }
 
         stage('Deploy to EC2') {
-            steps {
-                script {
-                    // Copy SSH key to a temporary location for use
-                    // Note: This assumes mykeyy.pem is already copied into the Jenkins container at EC2_KEY_PATH
-                    // and chmod 400 is applied.
-                    // We are doing it again here in case the container gets recreated without the persistent key
-                    // but ideally, 'docker cp' should be done once after container creation/recreation.
-                    // For the purpose of this Jenkinsfile, we'll assume the key is accessible.
-
-                    // Commands to run on the EC2 instance via SSH
-                    sshagent(credentials: ['ec2-ssh-key']) { // 'ec2-ssh-key' will be a new credential ID we create later
-                        sh """
-                            ssh -o StrictHostKeyChecking=no -i ${env.EC2_KEY_PATH} ubuntu@${env.EC2_IP} <<EOF
-                              echo "Stopping existing container..."
-                              docker stop ${env.REPO_NAME} || true
-                              echo "Removing existing container..."
-                              docker rm ${env.REPO_NAME} || true
-                              echo "Pulling new Docker image..."
-                              docker pull ${env.DOCKERHUB_USERNAME}/${env.REPO_NAME}:latest
-                              echo "Running new container..."
-                              docker run -d --name ${env.REPO_NAME} -p 80:80 ${env.DOCKERHUB_USERNAME}/${env.REPO_NAME}:latest
-                              echo "Deployment complete!"
-                            EOF
-                        """
+                steps {
+                    script {
+                        sshagent(credentials: ['ec2-ssh-key']) { // 'ec2-ssh-key' is the credential ID
+                            sh """
+                                ssh -o StrictHostKeyChecking=no ubuntu@${env.EC2_IP} << 'EOF'
+                                  echo "Stopping existing container..."
+                                  docker stop ${env.REPO_NAME} || true
+                                  echo "Removing existing container..."
+                                  docker rm ${env.REPO_NAME} || true
+                                  echo "Pulling new Docker image..."
+                                  docker pull ${env.DOCKERHUB_USERNAME}/${env.REPO_NAME}:latest
+                                  echo "Running new container..."
+                                  docker run -d --name ${env.REPO_NAME} -p 80:80 ${env.DOCKERHUB_USERNAME}/${env.REPO_NAME}:latest
+                                  echo "Deployment complete!"
+EOF
+                            """
+                        }
                     }
                 }
             }
-        }
-    }
 
     post {
         always {
